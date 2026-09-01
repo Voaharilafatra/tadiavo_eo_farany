@@ -90,7 +90,7 @@ function ClientHeader({ user, onSearch }) {
                   {user?.name || user?.email?.split('@')[0]}
                 </span>
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  Client
+                  {user?.role === 'prestataire' ? 'Prestataire' : 'Client'}
                 </span>
               </div>
               <FiChevronDown className={`text-zinc-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -104,7 +104,7 @@ function ClientHeader({ user, onSearch }) {
                 </div>
                 <div className="p-2">
                   <Link 
-                    to="/profile" 
+                    to={user?.role === 'prestataire' ? "/prestataire/profile" : "/client/profile"} 
                     onClick={() => setIsDropdownOpen(false)}
                     className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-yellow-50 hover:text-yellow-600"
                   >

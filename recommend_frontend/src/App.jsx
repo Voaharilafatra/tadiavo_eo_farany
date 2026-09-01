@@ -8,6 +8,8 @@ import BackToTop from './components/BackToTop.jsx'
 
 import ClientLayout from './layouts/ClientLayout.jsx'
 
+import ProviderLayout from './layouts/ProviderLayout.jsx'
+
 const Home = lazy(() => import('./pages/Home.jsx'))
 const OAuth = lazy(() => import('./pages/OAuth.jsx'))
 const ClientHome = lazy(() => import('./pages/client/ClientHome.jsx'))
@@ -15,6 +17,7 @@ const ResultatsRecherche = lazy(() => import('./pages/client/ResultatsRecherche.
 const ProviderInfo = lazy(() => import('./pages/client/ProviderInfo.jsx'))
 const BecomeProviderForm = lazy(() => import('./pages/client/BecomeProviderForm.jsx'))
 const HomePrestataire = lazy(() => import('./pages/provider/HomePrestataire.jsx'))
+const Profile = lazy(() => import('./pages/shared/Profile.jsx'))
 
 function PageLoader() {
   return (
@@ -69,13 +72,17 @@ function App() {
             <Route index element={<Suspense fallback={<PageLoader />}><ClientHome /></Suspense>} />
             <Route path="recherche" element={<Suspense fallback={<PageLoader />}><ResultatsRecherche /></Suspense>} />
             <Route path="devenir-prestataire" element={<Suspense fallback={<PageLoader />}><BecomeProviderForm /></Suspense>} />
+            <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
           </Route>
 
           {/* Route Info Prestataire sans Header/Footer global */}
           <Route path="/client/prestataire/:id" element={<Suspense fallback={<PageLoader />}><ProviderInfo /></Suspense>} />
           
-          {/* Routes Prestataire (pourrait avoir son propre layout plus tard) */}
-          <Route path="/prestataire" element={<Suspense fallback={<PageLoader />}><HomePrestataire /></Suspense>} />
+          {/* Routes Prestataire */}
+          <Route path="/prestataire" element={<ProviderLayout />}>
+            <Route index element={<Suspense fallback={<PageLoader />}><HomePrestataire /></Suspense>} />
+            <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+          </Route>
 
           {/* Routes publiques */}
           <Route path="/*" element={<Layout />} />

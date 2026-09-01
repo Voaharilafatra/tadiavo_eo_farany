@@ -1,8 +1,32 @@
 import { useParams, Link } from 'react-router-dom'
-import { FiMapPin, FiStar, FiClock, FiPhone, FiMail, FiCheck, FiArrowLeft } from 'react-icons/fi'
+import { FiMapPin, FiStar, FiClock, FiPhone, FiMail, FiCheck, FiArrowLeft, FiNavigation } from 'react-icons/fi'
+import { useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+import icon from 'leaflet/dist/images/marker-icon.png'
+import iconShadow from 'leaflet/dist/images/marker-shadow.png'
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+})
+L.Marker.prototype.options.icon = DefaultIcon
 
 function ProviderInfo() {
   const { id } = useParams()
+  const [rating, setRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [reviewText, setReviewText] = useState('')
+  const [showRoute, setShowRoute] = useState(false)
+  const [travelMode, setTravelMode] = useState('DRIVING')
+  const [myReview, setMyReview] = useState({ rating: 4, text: "Très bon travail, je recommande !" })
+
+  // Simulation position utilisateur (Ex: Analakely)
+  const userLocation = { lat: -18.9000, lng: 47.5200 }
 
   // Données factices basées sur le modèle JSON demandé
   const provider = {
@@ -34,6 +58,10 @@ function ProviderInfo() {
       neighborhood: "Ambohijatovo",
       description: "Près de l'ancien marché"
     },
+    location: {
+      lat: -18.9100,
+      lng: 47.5250
+    },
     opening_hours: {
       lundi: { open: "08:00", close: "17:00" },
       mardi: { open: "08:00", close: "17:00" },
@@ -44,6 +72,12 @@ function ProviderInfo() {
       email: "contact@plombierexpress.mg"
     },
     features: ["Devis gratuit", "Intervention d'urgence", "Garantie 1 an"]
+  }
+
+  const calculateRoute = () => {
+    // Avec Leaflet, calculer un itinéraire réel nécessite un plugin comme leaflet-routing-machine
+    // Pour la démo, on simule juste l'affichage d'une ligne droite entre les deux points.
+    setShowRoute(true)
   }
 
   return (
@@ -125,20 +159,78 @@ function ProviderInfo() {
 
             {/* Avis et commentaires */}
             <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-zinc-200">
-              <h2 className="text-xl font-bold text-black mb-6">Laisser un avis</h2>
-              <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100">
-                <div className="flex gap-2 text-zinc-300 mb-4 text-2xl">
-                  {[1, 2, 3, 4, 5].map(star => <FiStar key={star} className="hover:text-yellow-400 hover:fill-yellow-400 cursor-pointer transition" />)}
+              <h2 className="text-xl font-bold text-black mb-6">Mon Avis</h2>
+              
+              {myReview ? (
+                <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 mb-6 relative">
+                  <div className="flex gap-2 text-yellow-400 mb-3">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <FiStar key={star} className={star <= myReview.rating ? "fill-yellow-400" : "text-zinc-300"} />
+                    ))}
+                  </div>
+                  <p className="text-zinc-700 italic">"{myReview.text}"</p>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm("Voulez-vous vraiment supprimer votre avis ?")) {
+                        setMyReview(null);
+                      }
+                    }}
+                    className="absolute top-4 right-4 text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition"
+                  >
+                    Supprimer
+                  </button>
                 </div>
-                <textarea 
-                  rows="3" 
-                  placeholder="Partagez votre expérience avec ce prestataire..."
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-yellow-400 mb-4"
-                ></textarea>
-                <button className="bg-black text-white font-bold py-2.5 px-6 rounded-full hover:bg-zinc-800 transition">
-                  Publier l'avis
-                </button>
-              </div>
+              ) : (
+                <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100">
+                  <div className="flex gap-2 text-zinc-300 mb-4 text-2xl">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <FiStar 
+                        key={star} 
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(star)}
+                        className={`cursor-pointer transition ${
+                          (hoverRating || rating) >= star 
+                            ? "text-yellow-400 fill-yellow-400" 
+                            : "hover:text-yellow-400"
+                        }`} 
+                      />
+                    ))}
+                  </div>
+                  <textarea 
+                    rows="3" 
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Partagez votre expérience avec ce prestataire..."
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-yellow-400 mb-4"
+                  ></textarea>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => {
+                        setRating(0);
+                        setHoverRating(0);
+                        setReviewText('');
+                      }}
+                      className="bg-zinc-200 text-zinc-600 font-bold py-2.5 px-6 rounded-full hover:bg-zinc-300 transition"
+                    >
+                      Annuler
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (rating === 0) alert("Veuillez sélectionner une note (étoiles) !");
+                        else {
+                          setMyReview({ rating, text: reviewText });
+                          setRating(0);
+                          setReviewText('');
+                        }
+                      }}
+                      className="bg-black text-white font-bold py-2.5 px-6 rounded-full hover:bg-zinc-800 transition"
+                    >
+                      Publier l'avis
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
 
           </div>
@@ -182,15 +274,68 @@ function ProviderInfo() {
               </div>
             </div>
 
-            {/* Carte Google Map Placeholder */}
-            <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-zinc-200 h-64 overflow-hidden relative group cursor-pointer">
-              <div className="absolute inset-0 bg-zinc-200 flex flex-col items-center justify-center text-zinc-500">
-                <FiMapPin className="text-4xl text-yellow-500 mb-2" />
-                <p className="font-bold">Google Maps API</p>
-                <p className="text-xs">Itinéraire depuis votre position</p>
+            {/* Carte Interactive Leaflet */}
+            <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-zinc-200">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <h3 className="font-bold text-black flex items-center gap-2">
+                  <FiNavigation className="text-yellow-500" /> Itinéraire
+                </h3>
+                <select 
+                  value={travelMode}
+                  onChange={(e) => {
+                    setTravelMode(e.target.value)
+                    setShowRoute(false)
+                  }}
+                  className="bg-zinc-50 border border-zinc-200 text-sm rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value="DRIVING">Voiture</option>
+                  <option value="WALKING">À pied</option>
+                  <option value="BICYCLING">Vélo</option>
+                </select>
               </div>
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center backdrop-blur-sm">
-                <button className="bg-yellow-400 text-white font-bold py-2 px-6 rounded-full shadow-lg">Voir l'itinéraire</button>
+
+              <div className="h-64 rounded-2xl overflow-hidden relative z-0">
+                <MapContainer center={[provider.location.lat, provider.location.lng]} zoom={14} style={{ height: '100%', width: '100%' }}>
+                  <TileLayer
+                    attribution='&copy; OpenStreetMap'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  
+                  {/* Marqueur du prestataire */}
+                  <Marker position={[provider.location.lat, provider.location.lng]}>
+                    <Popup>{provider.name}</Popup>
+                  </Marker>
+
+                  {/* Marqueur de l'utilisateur (si itinéraire activé) */}
+                  {showRoute && (
+                    <>
+                      <Marker position={[userLocation.lat, userLocation.lng]}>
+                        <Popup>Votre position</Popup>
+                      </Marker>
+                      {/* Tracé de l'itinéraire (Ligne simple pour la démo) */}
+                      <Polyline 
+                        positions={[
+                          [userLocation.lat, userLocation.lng],
+                          [provider.location.lat, provider.location.lng]
+                        ]}
+                        color="blue"
+                        weight={4}
+                        dashArray={travelMode === 'WALKING' ? "5, 10" : ""}
+                      />
+                    </>
+                  )}
+                </MapContainer>
+
+                {!showRoute && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
+                    <button 
+                      onClick={calculateRoute}
+                      className="bg-yellow-400 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:scale-105 active:scale-95 transition"
+                    >
+                      Voir l'itinéraire
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
