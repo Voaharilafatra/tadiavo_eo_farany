@@ -28,11 +28,19 @@ function PageLoader() {
 }
 
 function Layout() {
-  const isAuth = !!localStorage.getItem('token');
+  const isAuth = !!localStorage.getItem('token')
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
 
   if (isAuth) {
-    return <Navigate to="/client" replace />;
+    if (user?.role === 'client') {
+      return <Navigate to="/client" replace />
+    }
+
+    if (user?.role === 'prestataire') {
+      return <Navigate to="/prestataire" replace />
+    }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -77,7 +85,7 @@ function App() {
 
           {/* Route Info Prestataire sans Header/Footer global */}
           <Route path="/client/prestataire/:id" element={<Suspense fallback={<PageLoader />}><ProviderInfo /></Suspense>} />
-          
+
           {/* Routes Prestataire */}
           <Route path="/prestataire" element={<ProviderLayout />}>
             <Route index element={<Suspense fallback={<PageLoader />}><HomePrestataire /></Suspense>} />
