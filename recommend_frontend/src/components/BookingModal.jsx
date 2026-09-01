@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FiCalendar, FiClock, FiX } from 'react-icons/fi';
-import apiClient from '../api/client';
+import api from '../api/api';
 import Swal from 'sweetalert2';
 
 function BookingModal({ provider, isOpen, onClose }) {

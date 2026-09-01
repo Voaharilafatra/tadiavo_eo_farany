@@ -1,7 +1,7 @@
 import { FiLogIn, FiUser, FiChevronDown, FiLogOut, FiBell } from 'react-icons/fi'
 import { useState, useEffect, useRef } from 'react'
 import { GoogleLogin } from '@react-oauth/google'
-import apiClient from '../api/client'
+import api from '../api/api'
 import { Link, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import NotificationPopover from './NotificationPopover'

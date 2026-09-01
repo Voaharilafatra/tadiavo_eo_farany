@@ -2,7 +2,7 @@ import { FiArrowRight, FiHeart, FiMapPin, FiShield, FiStar, FiZap } from 'react-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import 'animate.css'
-import apiClient from '../api/client'
+import api from '../api/api';
 
 const features = [
   { icon: FiZap, title: 'Visibilité pour petits prestataires', text: 'Augmentez votre présence locale pour être trouvé par plus de clients.' },

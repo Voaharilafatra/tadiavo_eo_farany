@@ -1,6 +1,6 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../api/client';
+import api from '../api/api';
 import { FiArrowLeft } from 'react-icons/fi';
 
 function OAuth() {

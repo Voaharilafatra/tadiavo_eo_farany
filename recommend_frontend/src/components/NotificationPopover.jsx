@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiBell } from 'react-icons/fi';
-import apiClient from '../api/client';
+import api from '../api/api';
 
 function NotificationPopover({ user }) {
   const [notifications, setNotifications] = useState([]);
