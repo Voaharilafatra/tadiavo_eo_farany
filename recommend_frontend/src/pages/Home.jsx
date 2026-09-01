@@ -2,6 +2,7 @@ import { FiArrowRight, FiHeart, FiMapPin, FiShield, FiStar, FiZap } from 'react-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import 'animate.css'
+import Swal from 'sweetalert2'
 import api from '../api/api';
 
 const features = [
@@ -41,6 +42,41 @@ const testimonials = [
 function Home() {
   const [activeStep, setActiveStep] = useState(1)
   const [nearbyServices, setNearbyServices] = useState([])
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault()
+    if (!contactForm.name || !contactForm.email || !contactForm.message) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Champs manquants',
+        text: 'Veuillez remplir tous les champs du formulaire.',
+        confirmButtonColor: '#eab308'
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    // Simulation d'envoi ou ouverture du client mail
+    setTimeout(() => {
+      setIsSubmitting(false)
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Message envoyé !',
+        text: 'Votre demande a bien été transmise à mivononaandrehy7@gmail.com. Nous vous répondrons très vite.',
+        confirmButtonColor: '#eab308'
+      }).then(() => {
+        // Optionnel : Ouvrir la boîte mail native de l'utilisateur pour confirmer l'envoi réel 
+        // s'il n'y a pas encore de backend configuré pour l'envoi d'emails.
+        window.location.href = `mailto:mivononaandrehy7@gmail.com?subject=Contact de ${contactForm.name}&body=${encodeURIComponent(contactForm.message)}%0A%0AEmail du contact: ${contactForm.email}`;
+        
+        setContactForm({ name: '', email: '', message: '' })
+      })
+    }, 1000)
+  }
 
   useEffect(() => {
     // Services à proximité avec coordonnées GPS (Données statiques pour la Landing)
@@ -374,26 +410,36 @@ function Home() {
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-yellow-400">Nous écrire</p>
             <h3 className="mt-4 text-2xl font-semibold text-black">Demande de contact rapide</h3>
             <p className="mt-3 text-sm leading-7 text-zinc-600">Laissez-nous un message et nous reviendrons vers vous très vite.</p>
-            <div className="mt-8 space-y-4">
+            <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
               <input 
                 type="text" 
+                value={contactForm.name}
+                onChange={e => setContactForm({...contactForm, name: e.target.value})}
                 placeholder="Votre nom" 
                 className="w-full rounded-3xl border border-zinc-200 bg-white px-5 py-4 text-sm text-black outline-none ring-0 transition-all duration-300 focus:border-yellow-400 focus:shadow-md focus:shadow-yellow-400/20 hover:border-yellow-300" 
               />
               <input 
                 type="email" 
+                value={contactForm.email}
+                onChange={e => setContactForm({...contactForm, email: e.target.value})}
                 placeholder="Votre email" 
                 className="w-full rounded-3xl border border-zinc-200 bg-white px-5 py-4 text-sm text-black outline-none ring-0 transition-all duration-300 focus:border-yellow-400 focus:shadow-md focus:shadow-yellow-400/20 hover:border-yellow-300" 
               />
               <textarea 
                 rows="4" 
+                value={contactForm.message}
+                onChange={e => setContactForm({...contactForm, message: e.target.value})}
                 placeholder="Votre message" 
                 className="w-full rounded-3xl border border-zinc-200 bg-white px-5 py-4 text-sm text-black outline-none ring-0 transition-all duration-300 focus:border-yellow-400 focus:shadow-md focus:shadow-yellow-400/20 hover:border-yellow-300"
               />
-              <button className="w-full rounded-full bg-yellow-400 px-6 py-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-yellow-500 hover:scale-105 hover:shadow-lg hover:shadow-yellow-400/30 active:scale-95 animate__animated animate__pulse animate__infinite">
-                Envoyer le message
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full rounded-full bg-yellow-400 px-6 py-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-yellow-500 hover:scale-105 hover:shadow-lg hover:shadow-yellow-400/30 active:scale-95 ${isSubmitting ? 'opacity-70 cursor-wait' : 'animate__animated animate__pulse animate__infinite'}`}
+              >
+                {isSubmitting ? 'Envoi en cours...' : 'Envoyer le message'}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </motion.section>

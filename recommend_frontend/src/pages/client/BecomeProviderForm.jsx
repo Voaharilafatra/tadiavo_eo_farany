@@ -23,7 +23,12 @@ function BecomeProviderForm() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 py-10 px-5 sm:px-8 flex items-center justify-center">
+    <div className="min-h-screen bg-zinc-50 py-10 px-5 sm:px-8 flex flex-col items-center justify-center">
+      <div className="w-full max-w-3xl mb-6">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-zinc-500 hover:text-black transition font-semibold text-sm">
+          <FiArrowLeft /> Retour
+        </button>
+      </div>
       <div className="w-full max-w-3xl bg-white rounded-[2rem] shadow-sm border border-zinc-200 overflow-hidden">
         
         {/* Progress Bar */}
