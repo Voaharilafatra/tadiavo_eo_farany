@@ -1,0 +1,182 @@
+users{
+  "_id": "ObjectId",
+
+  "google_sub": "...",
+    "email": "...",
+    "name": "...",
+    "is_active": true,
+  "role": "user",
+
+
+  "created_at": "2026-08-11T..."
+}
+role(user
+provider
+admin)
+
+categories{
+  "_id": "restaurant",
+
+  "name": "Restaurant",
+
+  "description": "Restaurants et établissements de restauration",
+
+}
+
+providers{
+  "_id": "ObjectId",
+
+  "name": "Chez Maria",
+
+  "category_id": "restaurant",
+
+  "description": "Restaurant proposant une cuisine variée.",
+
+  "services": [
+    {
+      "id": "ObjectId",
+
+      "name": "Pizza Margherita",
+
+      "description": "Pizza avec tomate, mozzarella et basilic.",
+
+      "price": {
+        "amount": 18000,
+        "currency": "MGA"
+      },
+
+      "rating": {
+        "average": 4.8,
+        "count": 82
+      }
+    },
+
+    {
+      "id": "ObjectId",
+
+      "name": "Glace vanille",
+
+      "description": "Glace artisanale à la vanille.",
+
+      "price": {
+        "amount": 12000,
+        "currency": "MGA"
+      },
+
+      "rating": {
+        "average": 4.9,
+        "count": 127
+      }
+    },
+
+    {
+      "id": "ObjectId",
+
+      "name": "Burger",
+
+      "price": {
+        "amount": 15000,
+        "currency": "MGA"
+      },
+
+      "rating": {
+        "average": 3.2,
+        "count": 30
+      }
+    }
+  ],
+
+  "location": {
+    "type": "Point",
+    "coordinates": [
+      47.523,
+      -18.905
+    ]
+  },
+
+  "address": {
+    "city": "Antananarivo",
+    "district": "Analakely",
+    "description": "..."
+  },
+
+  "opening_hours": {
+    "monday": {
+      "open": "08:00",
+      "close": "20:00"
+    },
+
+    "sunday": {
+      "open": "13:00",
+      "close": "18:00"
+    }
+  },
+
+  "contact": {
+    "phone": "0340000000",
+    "email": "contact@example.com"
+  },
+
+  "features": [
+    "wifi",
+    "parking",
+    "mobile_money",
+    "livraison"
+  ],
+
+  "rating": {
+    "average": 4.2,
+    "count": 239
+  },
+
+  "images": [],
+
+  "owner_id": "ObjectId",
+
+  "status": "active",
+
+  "created_at": "...",
+  "updated_at": "..."
+}
+
+reviews{
+  "_id": "ObjectId",
+
+  "provider_id": "ObjectId",
+
+  "user_id": "ObjectId",
+
+  "rating": 5,
+
+  "comment": "La glace était excellente !",
+
+  "created_at": "2026-08-11T..."
+}
+
+searches{
+  "_id": "ObjectId",
+
+  "user_id": "ObjectId",
+
+  "query": "fleuriste",
+
+  "category_id": "fleuriste",
+  "service-id":
+
+  "service": "bouquet de mariage",
+
+  "filters": {
+    "max_price": 100000,
+    "city": "Antananarivo"
+  },
+
+  "location": {
+    "type": "Point",
+    "coordinates": [
+      47.52,
+      -18.91
+    ]
+  },
+
+  "created_at": "..."
+}

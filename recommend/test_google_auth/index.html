@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Recommend - Connexion</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <main class="login-container">
+
+        <section class="login-card">
+
+            <div class="logo">
+                Recommend
+            </div>
+
+            <h1>Bienvenue</h1>
+
+            <p class="subtitle">
+                Trouvez les meilleurs services près de vous.
+            </p>
+
+            <button
+                id="google-login"
+                class="google-button"
+                type="button"
+            >
+                <span class="google-icon">G</span>
+                <span>Continuer avec Google</span>
+            </button>
+
+        </section>
+
+    </main>
+
+    <!-- Google DOIT être chargé avant auth.js -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script src="js/auth.js"></script>
+
+</body>
+
+</html>

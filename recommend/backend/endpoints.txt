@@ -1,0 +1,33 @@
+bonjour nareo ireo le endpoint tedavina POST /auth/login
+
+PUT /users/me
+
+PATCH /users/me/password
+
+PATCH /users/me/avatar
+
+GET /services/search
+
+GET /services/nearby
+
+GET /services/{id}/reviews
+
+POST /services/{id}/reviews
+
+PATCH /reviews/{id}
+
+
+GET /users/me/favorites
+
+POST /services/{id}/favorite
+
+DELETE /services/{id}/favorite
+
+GET /notifications
+
+PATCH /notifications/{id}/read
+
+
+POST /contact/messages
+
+POST /uploads
