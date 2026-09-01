@@ -8,7 +8,7 @@ function NotificationPopover({ user }) {
 
   useEffect(() => {
     // 1. Initial fetch
-    apiClient.get('/notifications')
+    api.get('/notifications')
       .then(res => setNotifications(res.data))
       .catch(err => console.error("Erreur notifs", err));
 

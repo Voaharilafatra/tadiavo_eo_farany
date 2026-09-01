@@ -26,7 +26,7 @@ function Header() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      apiClient.get('/auth/users/me')
+      api.get('/auth/authusers/me')
         .then((response) => setUser(response.data))
         .catch(() => {
           localStorage.removeItem('token');
@@ -47,7 +47,7 @@ function Header() {
 
   const handleSuccess = async (credentialResponse) => {
     try {
-      const response = await apiClient.post('/auth/login_google', {
+      const response = await api.post('/auth/login_google', {
         credential: credentialResponse.credential, 
       });
       
@@ -55,7 +55,7 @@ function Header() {
       const actualToken = token.access_token ? token.access_token : token;
       localStorage.setItem('token', actualToken);
       
-      const userRes = await apiClient.get('/auth/users/me');
+      const userRes = await api.get('/authusers/me');
       setUser(userRes.data);
       
       // Afficher le toast de succès

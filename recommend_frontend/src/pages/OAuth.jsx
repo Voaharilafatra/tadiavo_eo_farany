@@ -1,36 +1,32 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import { useAuth } from '../contexts/AuthContext'
 import { FiArrowLeft } from 'react-icons/fi';
 
 function OAuth() {
   const navigate = useNavigate();
+  const { login, googleLogin, isAuthenticated, loading: authLoading } = useAuth()
 
   const handleSuccess = async (credentialResponse) => {
     try {
-      // Envoyer le token de Google à notre propre backend
-      const response = await apiClient.post('/auth/login_google', {
-        credential: credentialResponse.credential,
-      });
+      const credential = credentialResponse.credential;
 
-      // Le backend doit nous renvoyer notre token d'application (JWT)
-      const token = response.data; // ou response.data.token selon la structure
-      
-      // On sauvegarde le token pour les requêtes futures
-      localStorage.setItem('token', typeof token === 'string' ? token : token.access_token);
-      
-      // On redirige vers l'accueil
-      navigate('/');
-      
-      // Petit rechargement pour mettre à jour l'en-tête (connexion réussie)
-      window.location.reload();
-      
+      if (!credential) {
+        console.error("Credential Google manquant");
+        return;
+      }
+
+      await googleLogin(credential);
+
+      console.log("Utilisateur connecté", );
+
+     // navigate("/dashboard", { replace: true })
+
+
     } catch (error) {
-      console.error("Erreur de connexion:", error);
-      alert("La connexion a échoué. Veuillez réessayer.");
+      console.error("Erreur lors de la connexion :", error);
     }
   };
-
   const handleError = () => {
     console.log('Login Failed');
     alert("Impossible de se connecter avec Google.");
@@ -57,7 +53,7 @@ function OAuth() {
           />
         </div>
 
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-yellow-400 transition-colors"
         >

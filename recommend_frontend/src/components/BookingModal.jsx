@@ -20,7 +20,7 @@ function BookingModal({ provider, isOpen, onClose }) {
 
     try {
       const scheduled_at = new Date(`${date}T${time}:00Z`).toISOString();
-      await apiClient.post('/bookings', {
+      await api.post('/bookings', {
         provider_id: provider.id || provider._id,
         service_id: selectedService,
         scheduled_at,
