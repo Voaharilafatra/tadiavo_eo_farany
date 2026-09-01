@@ -18,7 +18,7 @@ export const authService = {
   },
 
   getCurrentUser: async () => {
-    const response = await api.get('/authusers/me'); // Updated based on FASTAPI_BACKEND_SPEC.md 
+    const response = await api.get('/auth/users/me'); // Updated based on FASTAPI_BACKEND_SPEC.md 
     return response.data;
   }
 };

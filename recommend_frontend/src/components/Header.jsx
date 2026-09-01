@@ -1,4 +1,4 @@
-import { FiLogIn, FiUser, FiChevronDown, FiLogOut, FiBell } from 'react-icons/fi'
+import { FiLogIn, FiUser, FiChevronDown, FiLogOut, FiBell, FiSearch } from 'react-icons/fi'
 import { useState, useEffect, useRef } from 'react'
 import { GoogleLogin } from '@react-oauth/google'
 import api from '../api/api'
@@ -26,7 +26,7 @@ function Header() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      api.get('/auth/authusers/me')
+      api.get('/auth/users/me')
         .then((response) => setUser(response.data))
         .catch(() => {
           localStorage.removeItem('token');
@@ -55,7 +55,7 @@ function Header() {
       const actualToken = token.access_token ? token.access_token : token;
       localStorage.setItem('token', actualToken);
       
-      const userRes = await api.get('/authusers/me');
+      const userRes = await api.get('/auth/users/me');
       setUser(userRes.data);
       
       // Afficher le toast de succès
@@ -115,18 +115,16 @@ function Header() {
             TADIAVO-EO
           </Link>
 
-          <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex">
+          <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex flex-1 justify-center px-8">
             {user ? (
-              <>
-                <Link to="/" className="transition hover:text-yellow-400">Recherche</Link>
-                <Link to="/favoris" className="transition hover:text-yellow-400">Mes Favoris</Link>
-                
-                {user.role === 'admin' && (
-                  <Link to="/admin" className="font-bold text-purple-500 transition hover:text-purple-600">
-                    Administration
-                  </Link>
-                )}
-              </>
+              <div className="relative w-full max-w-lg">
+                <input 
+                  type="text" 
+                  placeholder="Rechercher un service, un prestataire..."
+                  className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-yellow-400 focus:bg-white focus:ring-2 focus:ring-yellow-400/20"
+                />
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-lg" />
+              </div>
             ) : (
               landingNavItems.map((item) => (
                 <a key={item.href} href={item.href} className="transition hover:text-yellow-400">
