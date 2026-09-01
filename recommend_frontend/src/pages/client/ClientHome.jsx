@@ -13,7 +13,6 @@ function ClientHome() {
     maxPrice: ''
   })
 
-  
   const categories = ['Plomberie', 'Électricité', 'Ménage', 'Jardinage', 'Mécanique', 'Beauté']
   const cities = ['Antananarivo', 'Toamasina', 'Antsirabe', 'Fianarantsoa']
   const neighborhoods = ['Analakely', 'Ambohijatovo', 'Ankorondrano', 'Ivandry', 'Tanjombato']
@@ -69,19 +68,6 @@ function ClientHome() {
       img: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=80' 
     },
   ]
-
-  const filteredProviders = mockProviders.filter(provider => {
-    let match = true;
-    if (filters.category && provider.category !== filters.category) match = false;
-    if (filters.city && provider.city !== filters.city) match = false;
-    if (filters.neighborhood && provider.neighborhood !== filters.neighborhood) match = false;
-    if (filters.rating) {
-      const minRating = parseInt(filters.rating.replace('+', ''));
-      if (provider.rating < minRating) match = false;
-    }
-    if (filters.maxPrice && provider.price > parseInt(filters.maxPrice)) match = false;
-    return match;
-  });
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target
@@ -246,8 +232,8 @@ function ClientHome() {
         <div className="mt-12">
           <h3 className="text-xl font-bold text-black mb-6">Prestataires plus recommandés par l'IA</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProviders.length > 0 ? (
-              filteredProviders.map(provider => (
+            {mockProviders.length > 0 ? (
+              mockProviders.map(provider => (
                 <div 
                   key={provider.id} 
                   onClick={() => navigate(`/client/prestataire/${provider.id}`)}

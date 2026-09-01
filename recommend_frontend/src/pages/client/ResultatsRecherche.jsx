@@ -1,5 +1,5 @@
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { FiFilter, FiStar, FiMapPin } from 'react-icons/fi'
+import { FiFilter, FiStar, FiMapPin, FiArrowLeft } from 'react-icons/fi'
 import { useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -99,8 +99,11 @@ function ResultatsRecherche() {
     <div className="flex flex-col md:flex-row h-[calc(100vh-73px)] overflow-hidden bg-white">
       
       {/* Colonne de Gauche : Liste des résultats */}
-      <div className="w-full md:w-1/2 lg:w-[55%] h-full overflow-y-auto p-5 sm:p-8 bg-zinc-50 border-r border-zinc-200">
+      <div className="w-full md:w-1/2 lg:w-[55%] h-1/2 md:h-full overflow-y-auto p-5 sm:p-8 bg-zinc-50 border-b md:border-b-0 md:border-r border-zinc-200 order-2 md:order-1">
         <div className="mb-6">
+          <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-zinc-500 hover:text-black mb-4 transition font-semibold text-sm">
+            <FiArrowLeft /> Retour
+          </button>
           <h1 className="text-2xl font-extrabold text-black">Résultats de recherche</h1>
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             {q && <span className="bg-white border border-zinc-200 px-3 py-1 rounded-full text-zinc-600">Recherche: <span className="font-bold">{q}</span></span>}
@@ -154,7 +157,7 @@ function ResultatsRecherche() {
       </div>
 
       {/* Colonne de Droite : Carte Interactive Leaflet */}
-      <div className="w-full md:w-1/2 lg:w-[45%] h-[50vh] md:h-full relative bg-zinc-100 z-0">
+      <div className="w-full md:w-1/2 lg:w-[45%] h-1/2 md:h-full relative bg-zinc-100 z-0 order-1 md:order-2">
         <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
           <ChangeView center={center} zoom={12} />
           <TileLayer

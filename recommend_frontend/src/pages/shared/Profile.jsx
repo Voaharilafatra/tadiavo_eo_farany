@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { FiUser, FiMail, FiMapPin, FiPhone, FiEdit2, FiSave, FiX } from 'react-icons/fi'
+import { FiUser, FiMail, FiMapPin, FiPhone, FiEdit2, FiSave, FiX, FiArrowLeft } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api/api'
 
 function Profile() {
   const [user, setUser] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({})
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Simuler le chargement des infos depuis l'API ou le localStorage
@@ -36,6 +38,9 @@ function Profile() {
   return (
     <div className="min-h-screen bg-zinc-50 py-12 px-5 sm:px-8">
       <div className="max-w-3xl mx-auto">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-zinc-500 hover:text-black mb-6 transition font-semibold text-sm">
+          <FiArrowLeft /> Retour
+        </button>
         <h1 className="text-3xl font-extrabold text-black mb-8">Mon Profil</h1>
         
         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-zinc-200">
