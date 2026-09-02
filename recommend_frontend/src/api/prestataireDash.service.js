@@ -19,10 +19,10 @@ export const prestataireDashboardService = {
 
         return response.data
     },
-    
-    updatePrestataire: async (prestataireId, data) => {
+
+    updateService: async (serviceId, data) => {
         const response = await api.patch(
-            `/prestataires/${prestataireId}`,
+            `/prestataires/${serviceId}`,
             data
         )
 
@@ -45,6 +45,21 @@ export const prestataireDashboardService = {
         const response = await api.post(
             `/prestataires/${prestataireId}/images`,
             formData
+        )
+
+        return response.data
+    },
+
+    async addService(serviceData) {
+        const providerId = localStorage.getItem('provider_id')
+
+        if (!providerId) {
+            throw new Error('Provider ID introuvable.')
+        }
+
+        const response = await api.post(
+            `/prestataires/${providerId}/services`,
+            serviceData
         )
 
         return response.data

@@ -59,10 +59,14 @@ export function AuthProvider({ children }) {
     setError(null)
     try {
       const data = await authService.loginWithGoogle(credential)
-      
+      console.log('Données reçues après la connexion Google :', data)
       setUser(data.user)
       setToken(data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
+     if (data.user.role === 'prestataire') {
+      console.log('Enrichissement du localStorage pour le prestataire')
+  await enrichProviderStorage(data.user)
+}
       localStorage.setItem('token', data.access_token)
       return data.user
     } catch (err) {

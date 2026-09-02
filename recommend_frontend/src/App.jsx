@@ -9,6 +9,7 @@ import BackToTop from './components/BackToTop.jsx'
 import ClientLayout from './layouts/ClientLayout.jsx'
 
 import ProviderLayout from './layouts/ProviderLayout.jsx'
+import { enrichProviderStorage} from './api/auth.service.js'
 
 const Home = lazy(() => import('./pages/Home.jsx'))
 const OAuth = lazy(() => import('./pages/OAuth.jsx'))
@@ -37,6 +38,7 @@ function Layout() {
     }
 
     if (user?.role === 'prestataire') {
+
       return <Navigate to="/prestataire" replace />
     }
   }

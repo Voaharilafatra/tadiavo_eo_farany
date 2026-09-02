@@ -47,18 +47,65 @@ function Header() {
 
   const handleSuccess = async (credentialResponse) => {
     try {
+      // 1. Connexion Google
       const response = await api.post('/auth/login_google', {
-        credential: credentialResponse.credential, 
+        credential: credentialResponse.credential,
       });
-      
+
       const token = response.data;
       const actualToken = token.access_token ? token.access_token : token;
+
+      // 2. Enregistrer le token
       localStorage.setItem('token', actualToken);
-      
+
+      console.log(
+        'Token enregistré dans le localStorage :',
+        actualToken
+      );
+
+      // 3. Récupérer l'utilisateur connecté
       const userRes = await api.get('/auth/users/me');
-      setUser(userRes.data);
-      
-      // Afficher le toast de succès
+      const user = userRes.data;
+
+      // 4. Enregistrer l'utilisateur
+      localStorage.setItem('user', JSON.stringify(user));
+
+      console.log('User enregistré dans le localStorage :', user);
+
+      // 5. Si c'est un prestataire, récupérer son provider_id
+      if (user.role === 'prestataire') {
+        try {
+          const providerRes = await api.get(
+            `/prestataires/owner/${user._id}`
+          );
+
+          const providerId = providerRes.data.provider_id;
+
+          if (providerId) {
+            localStorage.setItem('provider_id', providerId);
+
+            console.log(
+              'Provider ID enregistré dans le localStorage :',
+              providerId
+            );
+          } else {
+            console.warn('Provider ID introuvable');
+          }
+
+        } catch (providerError) {
+          console.error(
+            'Erreur récupération provider_id :',
+            providerError.response?.data || providerError
+          );
+
+          // On peut continuer la connexion même si le provider_id échoue
+        }
+      }
+
+      // 6. Mettre à jour le state
+      setUser(user);
+
+      // 7. Toast de succès
       const Toast = Swal.mixin({
         toast: true,
         position: 'top-end',
@@ -69,13 +116,14 @@ function Header() {
 
       Toast.fire({
         icon: 'success',
-        title: `Bienvenue, ${userRes.data.name || 'Utilisateur'} !`
+        title: `Bienvenue, ${user.name || 'Utilisateur'} !`
       }).then(() => {
         window.location.reload();
       });
 
     } catch (error) {
       console.error("Erreur de connexion:", error);
+
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
@@ -83,7 +131,6 @@ function Header() {
       });
     }
   };
-
   const handleLogout = () => {
     setIsDropdownOpen(false);
     Swal.fire({
@@ -107,7 +154,7 @@ function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur-xl shadow-sm animate__animated animate__fadeInDown">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8 lg:px-10">
-        
+
         {/* LOGO & NAVIGATION */}
         <div className="flex items-center gap-10">
           <Link to="/" className="flex items-center gap-3 text-lg font-extrabold text-black">
@@ -118,8 +165,8 @@ function Header() {
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex flex-1 justify-center px-8">
             {user ? (
               <div className="relative w-full max-w-lg">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Rechercher un service, un prestataire..."
                   className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-yellow-400 focus:bg-white focus:ring-2 focus:ring-yellow-400/20"
                 />
@@ -141,58 +188,58 @@ function Header() {
             <>
               <NotificationPopover user={user} />
               <div className="relative" ref={dropdownRef}>
-              <button 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-3 rounded-full hover:bg-zinc-50 p-1 pr-3 transition border border-transparent hover:border-zinc-200"
-              >
-                <div className="relative">
-                  <img 
-                    src={user.picture || 'https://via.placeholder.com/40'} 
-                    alt="Profil" 
-                    className="w-10 h-10 rounded-full object-cover border border-zinc-200"
-                  />
-                  {/* Point vert (en ligne) */}
-                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
-                </div>
-                
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-bold text-black leading-tight">
-                    {user.name || user.email?.split('@')[0]}
-                  </span>
-                  <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    {user.role === 'admin' ? 'Admin' : user.role === 'prestataire' ? 'Pro' : 'Client'}
-                  </span>
-                </div>
-                
-                <FiChevronDown className={`text-zinc-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-3 rounded-full hover:bg-zinc-50 p-1 pr-3 transition border border-transparent hover:border-zinc-200"
+                >
+                  <div className="relative">
+                    <img
+                      src={user.picture || 'https://via.placeholder.com/40'}
+                      alt="Profil"
+                      className="w-10 h-10 rounded-full object-cover border border-zinc-200"
+                    />
+                    {/* Point vert (en ligne) */}
+                    <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
+                  </div>
 
-              {/* Menu Déroulant (Dropdown) */}
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-56 rounded-2xl bg-white shadow-xl border border-zinc-100 overflow-hidden animate__animated animate__fadeIn animate__faster">
-                  <div className="p-4 border-b border-zinc-50 bg-zinc-50/50">
-                    <p className="text-sm font-bold text-black">{user.name}</p>
-                    <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-bold text-black leading-tight">
+                      {user.name || user.email?.split('@')[0]}
+                    </span>
+                    <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                      {user.role === 'admin' ? 'Admin' : user.role === 'prestataire' ? 'Pro' : 'Client'}
+                    </span>
                   </div>
-                  
-                  <div className="p-2">
-                    <Link 
-                      to="/profile" 
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-yellow-50 hover:text-yellow-600"
-                    >
-                      <FiUser /> Voir mon profil
-                    </Link>
-                    
-                    <button 
-                      onClick={handleLogout} 
-                      className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 mt-1"
-                    >
-                      <FiLogOut /> Déconnexion
-                    </button>
+
+                  <FiChevronDown className={`text-zinc-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Menu Déroulant (Dropdown) */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-56 rounded-2xl bg-white shadow-xl border border-zinc-100 overflow-hidden animate__animated animate__fadeIn animate__faster">
+                    <div className="p-4 border-b border-zinc-50 bg-zinc-50/50">
+                      <p className="text-sm font-bold text-black">{user.name}</p>
+                      <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                    </div>
+
+                    <div className="p-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-yellow-50 hover:text-yellow-600"
+                      >
+                        <FiUser /> Voir mon profil
+                      </Link>
+
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 mt-1"
+                      >
+                        <FiLogOut /> Déconnexion
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               </div>
             </>
           ) : (
