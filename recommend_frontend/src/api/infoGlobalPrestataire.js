@@ -1,6 +1,6 @@
 import api from './api'
 
-export const globalClientService = {
+const globalClientService = {
 
 
 
@@ -36,12 +36,12 @@ export const globalClientService = {
     },
 
     // Supprimer un avis
-    deleteReview: async (reviewId) => {
-        const response = await api.delete(
-            `/reviews/${reviewId}`
+    registerView: async (prestataireId) => {
+        await api.post(
+            `/prestataires/${prestataireId}/views`
         )
 
-        return response.data
+        return true
     },
-
 }
+export default globalClientService

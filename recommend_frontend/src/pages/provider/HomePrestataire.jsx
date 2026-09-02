@@ -288,13 +288,7 @@ const handleSaveService = async (e) => {
                       </span>
                     </div>
 
-                    <div className="mt-1 flex items-center gap-1">
-                      <FiStar className="text-yellow-500" />
-
-                      <span className="text-sm font-medium">
-                        {review.rating ?? '-'} / 5
-                      </span>
-                    </div>
+                   
 
                     <p className="mt-2 text-sm text-zinc-600">
                       {review.comment}
