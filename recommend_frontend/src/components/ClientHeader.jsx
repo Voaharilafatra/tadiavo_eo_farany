@@ -55,20 +55,6 @@ function ClientHeader({ user, onSearch }) {
           <span className="hidden sm:inline">TADIAVO-EO</span>
         </Link>
 
-        {/* BARRE DE RECHERCHE */}
-        <div className="flex-1 justify-center px-4 md:px-8 flex">
-          <form onSubmit={handleSearchSubmit} className="relative w-full max-w-lg">
-            <input 
-              type="text" 
-              placeholder="Rechercher..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-2 sm:py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-yellow-400 focus:bg-white focus:ring-2 focus:ring-yellow-400/20"
-            />
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-lg" />
-          </form>
-        </div>
-
         {/* PROFIL */}
         <div className="flex items-center gap-4">
           <div className="relative" ref={dropdownRef}>
