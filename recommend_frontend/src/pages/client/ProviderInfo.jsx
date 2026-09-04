@@ -16,7 +16,8 @@ import {
   TileLayer,
   Marker,
   Popup,
-  Polyline
+  Polyline,
+  useMap
 } from 'react-leaflet'
 
 import 'leaflet/dist/leaflet.css'
@@ -43,6 +44,17 @@ L.Marker.prototype.options.icon = DefaultIcon
 // --------------------------------------------------
 // Composant
 // --------------------------------------------------
+// Permet d'ajuster le zoom et le centrage de la carte sur l'itinéraire complet
+function MapFitBounds({ coords }) {
+  const map = useMap()
+  useEffect(() => {
+    if (coords && coords.length > 0) {
+      const bounds = L.latLngBounds(coords)
+      map.fitBounds(bounds, { padding: [30, 30] })
+    }
+  }, [coords, map])
+  return null
+}
 
 function ProviderInfo() {
   const { id } = useParams()
@@ -64,15 +76,230 @@ function ProviderInfo() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+
   // -----------------------------
-  // Position utilisateur
+  // États pour la géolocalisation et le routage
   // -----------------------------
 
-  // Simulation pour le moment
-  const userLocation = {
-    lat: -18.9000,
-    lng: 47.5200
+  // --------------------------------------------------
+  // Géolocalisation + itinéraire
+  // --------------------------------------------------
+
+const currentLocation = {
+  lat: -21.454768094089115,
+  lng: 47.093442861180726
+}
+
+const [routeCoords, setRouteCoords] = useState([])
+const [routeInfo, setRouteInfo] = useState(null)
+const [loadingRoute, setLoadingRoute] = useState(false)
+const [routeError, setRouteError] = useState(null)
+  const osrmProfileMap = {
+    DRIVING: 'driving',
+    WALKING: 'foot',
+    BICYCLING: 'bike'
   }
+
+  // --------------------------------------------------
+  // Calcul de l'itinéraire avec OSRM
+  // --------------------------------------------------
+
+  const fetchOSRMRoute = async (
+    userLat,
+    userLng,
+    mode
+  ) => {
+    if (
+      providerLatitude == null ||
+      providerLongitude == null
+    ) {
+      setRouteError(
+        'La position du prestataire est indisponible.'
+      )
+      return
+    }
+
+    const profile =
+      osrmProfileMap[mode] || 'driving'
+
+    const url =
+      `https://router.project-osrm.org/route/v1/${profile}/` +
+      `${userLng},${userLat};` +
+      `${providerLongitude},${providerLatitude}` +
+      `?overview=full&geometries=geojson`
+
+    try {
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error(
+          `Erreur HTTP ${response.status}`
+        )
+      }
+
+      const data = await response.json()
+
+      if (
+        data.code !== 'Ok' ||
+        !data.routes ||
+        data.routes.length === 0
+      ) {
+        throw new Error(
+          'Aucun itinéraire disponible pour ce mode de transport.'
+        )
+      }
+
+      const route = data.routes[0]
+
+      // OSRM = [longitude, latitude]
+      // Leaflet = [latitude, longitude]
+      const coordinates =
+        route.geometry.coordinates.map(
+          ([lng, lat]) => [lat, lng]
+        )
+
+      setRouteCoords(coordinates)
+
+      setRouteInfo({
+        distance: (route.distance / 1000).toFixed(1),
+        duration: Math.round(route.duration / 60)
+      })
+
+      setRouteError(null)
+      setShowRoute(true)
+
+    } catch (error) {
+      console.error(
+        'Erreur calcul itinéraire :',
+        error
+      )
+
+      setRouteCoords([])
+      setRouteInfo(null)
+      setRouteError(
+        'Impossible de calculer l’itinéraire.'
+      )
+    }
+  }
+
+  // --------------------------------------------------
+  // Récupérer la position réelle de l'utilisateur
+  // --------------------------------------------------
+
+const handleCalculateRoute = async () => {
+  if (
+    providerLatitude == null ||
+    providerLongitude == null
+  ) {
+    setRouteError(
+      'La localisation du prestataire est indisponible.'
+    )
+    return
+  }
+
+  try {
+    setLoadingRoute(true)
+    setRouteError(null)
+
+    const profile =
+      osrmProfileMap[travelMode] || 'driving'
+
+    const url =
+      `https://router.project-osrm.org/route/v1/${profile}/` +
+      `${currentLocation.lng},${currentLocation.lat};` +
+      `${providerLongitude},${providerLatitude}` +
+      `?overview=full&geometries=geojson`
+
+    console.log('Position de départ :', currentLocation)
+
+    console.log('Destination provider :', {
+      lat: providerLatitude,
+      lng: providerLongitude
+    })
+
+    console.log('URL OSRM :', url)
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      throw new Error(
+        `Erreur HTTP ${response.status}`
+      )
+    }
+
+    const data = await response.json()
+
+    console.log('Réponse OSRM :', data)
+
+    if (
+      data.code !== 'Ok' ||
+      !data.routes ||
+      data.routes.length === 0
+    ) {
+      throw new Error(
+        'Aucun itinéraire trouvé.'
+      )
+    }
+
+    const route = data.routes[0]
+
+    // OSRM -> [lng, lat]
+    // Leaflet -> [lat, lng]
+    const coordinates =
+      route.geometry.coordinates.map(
+        ([lng, lat]) => [lat, lng]
+      )
+
+    setRouteCoords(coordinates)
+
+    setRouteInfo({
+      distance: (route.distance / 1000).toFixed(1),
+      duration: Math.round(route.duration / 60)
+    })
+
+    setShowRoute(true)
+
+  } catch (error) {
+    console.error(
+      'Erreur calcul itinéraire :',
+      error
+    )
+
+    setRouteCoords([])
+    setRouteInfo(null)
+
+    setRouteError(
+      'Impossible de calculer l’itinéraire.'
+    )
+
+  } finally {
+    setLoadingRoute(false)
+  }
+}
+  // --------------------------------------------------
+  // Recalculer lorsque le mode change
+  // --------------------------------------------------
+
+  useEffect(() => {
+    if (
+      showRoute &&
+      currentLocation
+    ) {
+      const recalculate = async () => {
+        setLoadingRoute(true)
+
+        await fetchOSRMRoute(
+          currentLocation.lat,
+          currentLocation.lng,
+          travelMode
+        )
+
+        setLoadingRoute(false)
+      }
+
+      recalculate()
+    }
+  }, [travelMode])
 
   // -----------------------------
   // Chargement du provider
@@ -148,10 +375,6 @@ function ProviderInfo() {
   // -----------------------------
   // Itinéraire
   // -----------------------------
-
-  const calculateRoute = () => {
-    setShowRoute(true)
-  }
 
   // -----------------------------
   // Créer un avis
@@ -442,239 +665,238 @@ function ProviderInfo() {
             {/* Avis et commentaires */}
             <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-zinc-200">
 
-  {/* =====================================================
+              {/* =====================================================
       TITRE
   ===================================================== */}
-  <h2 className="text-xl font-bold text-black mb-6">
-    Avis et commentaires
-  </h2>
+              <h2 className="text-xl font-bold text-black mb-6">
+                Avis et commentaires
+              </h2>
 
 
-  {/* =====================================================
+              {/* =====================================================
       FORMULAIRE AJOUTER UN AVIS
   ===================================================== */}
-  <div className="mb-8 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
+              <div className="mb-8 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
 
-    <h3 className="text-lg font-bold text-black mb-4">
-      Donnez votre avis
-    </h3>
+                <h3 className="text-lg font-bold text-black mb-4">
+                  Donnez votre avis
+                </h3>
 
-    {/* Note */}
-    <div className="mb-4">
+                {/* Note */}
+                <div className="mb-4">
 
-      <p className="text-sm font-semibold text-zinc-600 mb-2">
-        Votre note
-      </p>
-
-      <div className="flex gap-2 text-2xl">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <FiStar
-            key={star}
-            onMouseEnter={() => setHoverRating(star)}
-            onMouseLeave={() => setHoverRating(0)}
-            onClick={() => setRating(star)}
-            className={`cursor-pointer transition ${
-              (hoverRating || rating) >= star
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-zinc-300 hover:text-yellow-400'
-            }`}
-          />
-        ))}
-      </div>
-
-    
-
-    </div>
-
-
-    {/* Commentaire */}
-    <div className="mb-4">
-
-      <label
-        htmlFor="review-comment"
-        className="text-sm font-semibold text-zinc-600"
-      >
-        Votre commentaire
-      </label>
-
-      <textarea
-        id="review-comment"
-        rows="4"
-        value={reviewText}
-        onChange={(e) => setReviewText(e.target.value)}
-        placeholder="Partagez votre expérience avec ce prestataire..."
-        className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
-      />
-
-    </div>
-
-
-    {/* Boutons */}
-    <div className="flex flex-wrap gap-3">
-
-      <button
-        type="button"
-        onClick={() => {
-          setRating(0)
-          setHoverRating(0)
-          setReviewText('')
-        }}
-        className="rounded-full bg-zinc-200 px-6 py-2.5 text-sm font-bold text-zinc-600 transition hover:bg-zinc-300"
-      >
-        Annuler
-      </button>
-
-      <button
-        type="button"
-        onClick={handleCreateReview}
-        disabled={rating === 0 && !reviewText.trim()}
-        className="rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Publier mon avis
-      </button>
-
-    </div>
-
-  </div>
-
-
-  {/* =====================================================
-      LISTE DES AVIS
-  ===================================================== */}
-
-  <div>
-
-    <div className="mb-4 flex items-center justify-between">
-
-      <h3 className="text-lg font-bold text-black">
-        Avis des clients
-      </h3>
-
-      <span className="text-sm text-zinc-500">
-        {reviews.length} avis
-      </span>
-
-    </div>
-
-
-    {reviews.length > 0 ? (
-
-      <div className="space-y-4">
-
-        {reviews.map((review) => (
-
-          <div
-            key={review.id}
-            className="rounded-2xl border border-zinc-100 bg-zinc-50 p-6"
-          >
-
-            {/* En-tête avis */}
-            <div className="flex items-start justify-between gap-4">
-
-              <div className="flex items-center gap-3">
-
-                {/* Avatar */}
-                {review.user?.picture ? (
-                  <img
-                    src={review.user.picture}
-                    alt={review.user.name || 'Utilisateur'}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100 font-bold text-yellow-700">
-                    {(review.user?.name || 'U')
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
-                )}
-
-                <div>
-
-                  <p className="font-bold text-black">
-                    {review.user?.name || 'Utilisateur'}
+                  <p className="text-sm font-semibold text-zinc-600 mb-2">
+                    Votre note
                   </p>
 
-                  {/* Étoiles */}
-                  <div className="mt-1 flex gap-1">
+                  <div className="flex gap-2 text-2xl">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <FiStar
                         key={star}
-                        className={
-                          star <= (review.rating || 0)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-zinc-300'
-                        }
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(star)}
+                        className={`cursor-pointer transition ${(hoverRating || rating) >= star
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-zinc-300 hover:text-yellow-400'
+                          }`}
                       />
                     ))}
                   </div>
+
+
+
+                </div>
+
+
+                {/* Commentaire */}
+                <div className="mb-4">
+
+                  <label
+                    htmlFor="review-comment"
+                    className="text-sm font-semibold text-zinc-600"
+                  >
+                    Votre commentaire
+                  </label>
+
+                  <textarea
+                    id="review-comment"
+                    rows="4"
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Partagez votre expérience avec ce prestataire..."
+                    className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                  />
+
+                </div>
+
+
+                {/* Boutons */}
+                <div className="flex flex-wrap gap-3">
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRating(0)
+                      setHoverRating(0)
+                      setReviewText('')
+                    }}
+                    className="rounded-full bg-zinc-200 px-6 py-2.5 text-sm font-bold text-zinc-600 transition hover:bg-zinc-300"
+                  >
+                    Annuler
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCreateReview}
+                    disabled={rating === 0 && !reviewText.trim()}
+                    className="rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Publier mon avis
+                  </button>
 
                 </div>
 
               </div>
 
 
-              {/* Date */}
-              <span className="text-xs text-zinc-400">
-                {review.created_at
-                  ? new Date(
-                      review.created_at
-                    ).toLocaleDateString('fr-FR')
-                  : ''}
-              </span>
+              {/* =====================================================
+      LISTE DES AVIS
+  ===================================================== */}
 
-            </div>
+              <div>
+
+                <div className="mb-4 flex items-center justify-between">
+
+                  <h3 className="text-lg font-bold text-black">
+                    Avis des clients
+                  </h3>
+
+                  <span className="text-sm text-zinc-500">
+                    {reviews.length} avis
+                  </span>
+
+                </div>
 
 
-            {/* Commentaire */}
-            {review.comment && (
-              <p className="mt-4 text-sm leading-relaxed text-zinc-700">
-                "{review.comment}"
-              </p>
-            )}
+                {reviews.length > 0 ? (
+
+                  <div className="space-y-4">
+
+                    {reviews.map((review) => (
+
+                      <div
+                        key={review.id}
+                        className="rounded-2xl border border-zinc-100 bg-zinc-50 p-6"
+                      >
+
+                        {/* En-tête avis */}
+                        <div className="flex items-start justify-between gap-4">
+
+                          <div className="flex items-center gap-3">
+
+                            {/* Avatar */}
+                            {review.user?.picture ? (
+                              <img
+                                src={review.user.picture}
+                                alt={review.user.name || 'Utilisateur'}
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100 font-bold text-yellow-700">
+                                {(review.user?.name || 'U')
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                            )}
+
+                            <div>
+
+                              <p className="font-bold text-black">
+                                {review.user?.name || 'Utilisateur'}
+                              </p>
+
+                              {/* Étoiles */}
+                              <div className="mt-1 flex gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <FiStar
+                                    key={star}
+                                    className={
+                                      star <= (review.rating || 0)
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-zinc-300'
+                                    }
+                                  />
+                                ))}
+                              </div>
+
+                            </div>
+
+                          </div>
 
 
-            {/* Suppression */}
-            {review.is_mine && (
-              <div className="mt-4">
+                          {/* Date */}
+                          <span className="text-xs text-zinc-400">
+                            {review.created_at
+                              ? new Date(
+                                review.created_at
+                              ).toLocaleDateString('fr-FR')
+                              : ''}
+                          </span>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDeleteReview(review.id)
-                  }
-                  className="rounded-full bg-red-50 px-4 py-2 text-xs font-bold text-red-500 transition hover:bg-red-100"
-                >
-                  Supprimer mon avis
-                </button>
+                        </div>
+
+
+                        {/* Commentaire */}
+                        {review.comment && (
+                          <p className="mt-4 text-sm leading-relaxed text-zinc-700">
+                            "{review.comment}"
+                          </p>
+                        )}
+
+
+                        {/* Suppression */}
+                        {review.is_mine && (
+                          <div className="mt-4">
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteReview(review.id)
+                              }
+                              className="rounded-full bg-red-50 px-4 py-2 text-xs font-bold text-red-500 transition hover:bg-red-100"
+                            >
+                              Supprimer mon avis
+                            </button>
+
+                          </div>
+                        )}
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                ) : (
+
+                  <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 py-10 text-center">
+
+                    <p className="text-zinc-500">
+                      Aucun avis pour le moment.
+                    </p>
+
+                    <p className="mt-1 text-sm text-zinc-400">
+                      Soyez le premier à partager votre expérience.
+                    </p>
+
+                  </div>
+
+                )}
 
               </div>
-            )}
 
-          </div>
-
-        ))}
-
-      </div>
-
-    ) : (
-
-      <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 py-10 text-center">
-
-        <p className="text-zinc-500">
-          Aucun avis pour le moment.
-        </p>
-
-        <p className="mt-1 text-sm text-zinc-400">
-          Soyez le premier à partager votre expérience.
-        </p>
-
-      </div>
-
-    )}
-
-  </div>
-
-</section>
+            </section>
           </div>
 
           {/* Colonne Latérale (Contact, Horaires, Map) */}
@@ -736,6 +958,7 @@ function ProviderInfo() {
               </div>
             </div>
 
+
             {/* Carte Interactive Leaflet */}
             <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-zinc-200">
               <div className="flex items-center justify-between mb-4 px-2">
@@ -744,11 +967,8 @@ function ProviderInfo() {
                 </h3>
                 <select
                   value={travelMode}
-                  onChange={(e) => {
-                    setTravelMode(e.target.value)
-                    setShowRoute(false)
-                  }}
-                  className="bg-zinc-50 border border-zinc-200 text-sm rounded-lg px-2 py-1 outline-none"
+                  onChange={(e) => setTravelMode(e.target.value)}
+                  className="bg-zinc-50 border border-zinc-200 text-sm rounded-lg px-2 py-1 outline-none font-medium cursor-pointer"
                 >
                   <option value="DRIVING">Voiture</option>
                   <option value="WALKING">À pied</option>
@@ -756,6 +976,7 @@ function ProviderInfo() {
                 </select>
               </div>
 
+              {/* Zone de la carte */}
               <div className="h-64 rounded-2xl overflow-hidden relative z-0">
                 <MapContainer
                   center={[
@@ -768,13 +989,17 @@ function ProviderInfo() {
                     width: '100%'
                   }}
                 >
-
                   <TileLayer
                     attribution='&copy; OpenStreetMap'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
 
-                  {/* Marqueur du prestataire */}
+                  {/* Vue automatique sur tout l'itinéraire */}
+                  {showRoute && routeCoords.length > 0 && (
+                    <MapFitBounds coords={routeCoords} />
+                  )}
+
+                  {/* Prestataire */}
                   <Marker
                     position={[
                       providerLatitude,
@@ -786,37 +1011,81 @@ function ProviderInfo() {
                     </Popup>
                   </Marker>
 
-                  {/* Marqueur de l'utilisateur (si itinéraire activé) */}
-                  {showRoute && (
+                  {/* Utilisateur + itinéraire */}
+                  {showRoute && currentLocation && (
                     <>
-                      <Marker position={[userLocation.lat, userLocation.lng]}>
-                        <Popup>Votre position</Popup>
-                      </Marker>
-                      {/* Tracé de l'itinéraire (Ligne simple pour la démo) */}
-                      <Polyline
-                        positions={[
-                          [userLocation.lat, userLocation.lng],
-                          [provider.location.lat, provider.location.lng]
+                      <Marker
+                        position={[
+                          currentLocation.lat,
+                          currentLocation.lng
                         ]}
-                        color="blue"
-                        weight={4}
-                        dashArray={travelMode === 'WALKING' ? "5, 10" : ""}
-                      />
+                      >
+                        <Popup>
+                          Votre position
+                        </Popup>
+                      </Marker>
+
+                      {routeCoords.length > 0 && (
+                        <Polyline
+                          positions={routeCoords}
+                          color="#eab308"
+                          weight={5}
+                          opacity={0.85}
+                        />
+                      )}
                     </>
                   )}
+
                 </MapContainer>
 
+                {/* Bouton de déclenchement */}
                 {!showRoute && (
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
                     <button
-                      onClick={calculateRoute}
-                      className="bg-yellow-400 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:scale-105 active:scale-95 transition"
+                      type="button"
+                      onClick={handleCalculateRoute}
+                      disabled={loadingRoute}
+                      className="bg-yellow-400 text-white font-bold py-2.5 px-6 rounded-full shadow-lg hover:bg-yellow-500 hover:scale-105 active:scale-95 transition disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Voir l'itinéraire
+                      {loadingRoute
+                        ? 'Recherche de votre position...'
+                        : "Voir l'itinéraire"}
                     </button>
                   </div>
                 )}
               </div>
+
+              {/* Informations de distance et durée déplacées en bas */}
+              {showRoute && routeInfo && (
+                <div className="mt-3 flex items-center justify-center gap-4 text-xs text-zinc-600">
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-yellow-500">
+                      {routeInfo.distance} km
+                    </span>
+                    <span>
+                      distance
+                    </span>
+                  </div>
+
+                  <span className="h-3 w-px bg-zinc-300" />
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-yellow-500">
+                      {routeInfo.duration} min
+                    </span>
+                    <span>
+                      environ
+                    </span>
+                  </div>
+
+                </div>
+              )}
+              {routeError && (
+                <p className="mt-2 text-center text-xs font-medium text-red-500">
+                  {routeError}
+                </p>
+              )}
             </div>
 
           </div>

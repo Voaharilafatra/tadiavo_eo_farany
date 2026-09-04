@@ -204,8 +204,10 @@ function ClientHome() {
     }
 
 navigate(
-  `/client/recherche?mode=criteria&${params.toString()}`
+  `/client/recherche/criteria?${params.toString()}`
 )
+
+
   }
 
   // -----------------------------
@@ -258,10 +260,10 @@ navigate(
 
         {/* Filtres */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="rounded-[2rem] border border-zinc-200 bg-white p-6 shadow-sm lg:p-8"
+          className="rounded-[2rem] border gap-1 border-zinc-200 bg-white p-2 shadow-sm lg:p-4"
         >
           {/* Titre */}
           <div className="mb-6 flex items-center gap-3">

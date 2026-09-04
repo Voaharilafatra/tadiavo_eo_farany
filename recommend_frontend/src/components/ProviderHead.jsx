@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 
-function ClientHeader({ user, onSearch }) {
+function ProviderHeader({ user, onSearch }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -41,59 +41,44 @@ function ClientHeader({ user, onSearch }) {
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     if (searchTerm.trim()) {
-      navigate(
-        `/client/recherche/natural?query=${encodeURIComponent(searchTerm.trim())}`
-      )
-
+      navigate(`/client/recherche?q=${encodeURIComponent(searchTerm.trim())}`)
     }
   }
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur-xl shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8 lg:px-10">
-
+        
         {/* LOGO */}
         <Link to="/" className="flex items-center gap-2 sm:gap-3 text-lg font-extrabold text-black">
           <span className="grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-xl bg-yellow-400 text-sm font-black text-white shadow-sm">T</span>
           <span className="hidden sm:inline">TADIAVO-EO</span>
         </Link>
 
-        {/* BARRE DE RECHERCHE */}
-        <div className="flex-1 justify-center px-4 md:px-8 flex">
-          <form onSubmit={handleSearchSubmit} className="relative w-full max-w-lg">
-            <input
-              type="text"
-              placeholder="Dites ce que vous cherchez à votre manière..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-2 sm:py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-yellow-400 focus:bg-white focus:ring-2 focus:ring-yellow-400/20"
-            />
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-lg" />
-          </form>
-        </div>
-
 
         {/* PROFIL */}
         <div className="flex items-center gap-4">
           <div className="relative" ref={dropdownRef}>
-            <button
+            <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-3 rounded-full hover:bg-zinc-50 p-1 pr-3 transition border border-transparent hover:border-zinc-200"
             >
               <div className="relative">
-                <img
-                  src={user?.picture || 'https://via.placeholder.com/40'}
-                  alt="Profil"
+                <img 
+                  src={user?.picture || 'https://via.placeholder.com/40'} 
+                  alt="Profil" 
                   className="w-10 h-10 rounded-full object-cover border border-zinc-200"
                 />
                 <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
               </div>
-
+              
               <div className="hidden flex-col items-start md:flex">
                 <span className="text-sm font-bold text-black leading-tight">
                   {user?.name || user?.email?.split('@')[0]}
                 </span>
-                
+                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  {user?.role === 'prestataire' ? 'Prestataire' : 'Client'}
+                </span>
               </div>
               <FiChevronDown className={`text-zinc-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -105,15 +90,15 @@ function ClientHeader({ user, onSearch }) {
                   <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
                 </div>
                 <div className="p-2">
-                  <Link
-                    to={user?.role === 'prestataire' ? "/prestataire/profile" : "/client/profile"}
+                  <Link 
+                    to={user?.role === 'prestataire' ? "/prestataire/profile" : "/client/profile"} 
                     onClick={() => setIsDropdownOpen(false)}
                     className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-yellow-50 hover:text-yellow-600"
                   >
                     <FiUser /> Voir mon profil
                   </Link>
-                  <button
-                    onClick={handleLogout}
+                  <button 
+                    onClick={handleLogout} 
                     className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 mt-1"
                   >
                     <FiLogOut /> Déconnexion
@@ -127,4 +112,4 @@ function ClientHeader({ user, onSearch }) {
     </header>
   )
 }
-export default ClientHeader
+export default ProviderHeader

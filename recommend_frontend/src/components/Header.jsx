@@ -104,22 +104,9 @@ function Header() {
 
       // 6. Mettre à jour le state
       setUser(user);
-
+window.location.reload();
       // 7. Toast de succès
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 1000,
-        timerProgressBar: true,
-      });
-
-      Toast.fire({
-        icon: 'success',
-        title: `Bienvenue, ${user.name || 'Utilisateur'} !`
-      }).then(() => {
-        window.location.reload();
-      });
+     
 
     } catch (error) {
       console.error("Erreur de connexion:", error);

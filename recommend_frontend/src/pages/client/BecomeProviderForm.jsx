@@ -11,7 +11,7 @@ import {
 } from 'react-icons/fi'
 
 import { devenirProService } from '../../api/devenirPro.service'
-import { clientExplorerService } from '../../api/clientExplor.service'
+import  clientExplorerService  from '../../api/clientExplor.service'
 
 function BecomeProviderForm() {
   const navigate = useNavigate()
@@ -254,39 +254,61 @@ function BecomeProviderForm() {
   // =========================================================
   // GEOLOCALISATION
   // =========================================================
-
-  const getCurrentLocation = () => {
-    setError(null)
-
-    if (!navigator.geolocation) {
-      setError(
-        "La géolocalisation n'est pas supportée par votre navigateur."
-      )
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const { longitude, latitude } = position.coords
-
-        // GeoJSON = [longitude, latitude]
-        setFormData(prev => ({
-          ...prev,
-          location: {
-            type: 'Point',
-            coordinates: [longitude, latitude]
-          }
-        }))
-      },
-      error => {
-        console.error('Erreur géolocalisation :', error)
-
-        setError(
-          "Impossible de récupérer votre position. Vérifiez que la géolocalisation est autorisée."
-        )
-      }
-    )
+const getCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    setError("La géolocalisation n'est pas supportée par votre navigateur.")
+    return
   }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords
+
+      setFormData(prev => ({
+        ...prev,
+        location: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        }
+      }))
+
+      setError(null)
+    },
+    (error) => {
+      console.error("Erreur géolocalisation :", error)
+
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          setError(
+            "L'accès à votre position a été refusé. Autorisez la géolocalisation dans les paramètres de votre navigateur."
+          )
+          break
+
+        case error.POSITION_UNAVAILABLE:
+          setError(
+            "Votre position n'est pas disponible actuellement."
+          )
+          break
+
+        case error.TIMEOUT:
+          setError(
+            "La récupération de votre position a pris trop de temps."
+          )
+          break
+
+        default:
+          setError(
+            "Impossible de récupérer votre position."
+          )
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  )
+}
 
   // =========================================================
   // VALIDATION AVANT PASSAGE A L'ETAPE SUIVANTE
@@ -365,89 +387,104 @@ function BecomeProviderForm() {
   // SOUMISSION
   // =========================================================
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+ const handleSubmit = async (e) => {
+  e.preventDefault()
 
-    try {
-      setLoading(true)
-      setError(null)
+  try {
+    setLoading(true)
+    setError(null)
 
-      const dataToSend = {
-        name: formData.name.trim(),
+    const dataToSend = {
+      name: formData.name.trim(),
 
-        category_ids: formData.category_ids,
+      category_ids: formData.category_ids,
 
-        description: formData.description.trim(),
+      description: formData.description.trim(),
 
-        services: formData.services.map(service => ({
-          name: service.name.trim(),
-          description: service.description.trim(),
-          price: {
-            avg: Number(service.price.avg),
-            currency: service.price.currency
-          }
-        })),
+      services: formData.services.map(service => ({
+        name: service.name.trim(),
+        description: service.description.trim(),
+        price: {
+          avg: Number(service.price.avg),
+          currency: service.price.currency
+        }
+      })),
 
-        location: {
-          type: 'Point',
-          coordinates: [
-            Number(formData.location.coordinates[0]),
-            Number(formData.location.coordinates[1])
-          ]
-        },
+      location: {
+        type: 'Point',
+        coordinates: [
+          Number(formData.location.coordinates[0]),
+          Number(formData.location.coordinates[1])
+        ]
+      },
 
-        address: {
-          municipality: formData.address.municipality.trim(),
-          neighborhood: formData.address.neighborhood.trim(),
-          description: formData.address.description.trim()
-        },
+      address: {
+        municipality: formData.address.municipality.trim(),
+        neighborhood: formData.address.neighborhood.trim(),
+        description: formData.address.description.trim()
+      },
 
-        opening_hours: formData.opening_hours,
+      opening_hours: formData.opening_hours,
 
-        contact: {
-          phone: formData.contact.phone.trim(),
-          email: formData.contact.email.trim()
-        },
+      contact: {
+        phone: formData.contact.phone.trim(),
+        email: formData.contact.email.trim()
+      },
 
-        features: formData.features
-      }
-
-      console.log(
-        'Données envoyées au backend :',
-        JSON.stringify(dataToSend, null, 2)
-      )
-
-      const response =
-        await devenirProService.createPrestataire(dataToSend)
-
-      console.log('Prestataire créé :', response)
-
-      navigate('/prestataire')
-    } catch (error) {
-      console.error(
-        'Erreur création prestataire :',
-        error.response?.data || error
-      )
-
-      const detail = error.response?.data?.detail
-
-      if (Array.isArray(detail)) {
-        setError(
-          detail
-            .map(item => item.msg || 'Erreur de validation')
-            .join(', ')
-        )
-      } else {
-        setError(
-          detail ||
-          "Impossible de créer le profil prestataire."
-        )
-      }
-    } finally {
-      setLoading(false)
+      features: formData.features
     }
-  }
 
+    console.log(
+      'Données envoyées au backend :',
+      JSON.stringify(dataToSend, null, 2)
+    )
+
+    // Attend :
+    // 1. la réponse du backend
+    // 2. l'enregistrement du provider_id dans localStorage
+    const response = await devenirProService.createPrestataire(dataToSend)
+
+    console.log('Prestataire créé :', response)
+
+    // Vérification facultative
+    const providerId = localStorage.getItem('provider_id')
+
+    console.log('Provider ID enregistré :', providerId)
+
+    if (!providerId) {
+      throw new Error(
+        "Le prestataire a été créé, mais son ID n'a pas été enregistré."
+      )
+    }
+
+    // La navigation arrive seulement après l'enregistrement
+    navigate('/prestataire')
+
+  } catch (error) {
+    console.error(
+      'Erreur création prestataire :',
+      error.response?.data || error
+    )
+
+    const detail = error.response?.data?.detail
+
+    if (Array.isArray(detail)) {
+      setError(
+        detail
+          .map(item => item.msg || 'Erreur de validation')
+          .join(', ')
+      )
+    } else {
+      setError(
+        detail ||
+        error.message ||
+        "Impossible de créer le profil prestataire."
+      )
+    }
+  } finally {
+    setLoading(false)
+  }
+}
   const slideVariants = {
     hidden: {
       x: 50,

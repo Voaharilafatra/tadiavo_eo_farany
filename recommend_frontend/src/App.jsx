@@ -9,7 +9,7 @@ import BackToTop from './components/BackToTop.jsx'
 import ClientLayout from './layouts/ClientLayout.jsx'
 
 import ProviderLayout from './layouts/ProviderLayout.jsx'
-import { enrichProviderStorage} from './api/auth.service.js'
+import { enrichProviderStorage } from './api/auth.service.js'
 
 const Home = lazy(() => import('./pages/Home.jsx'))
 const OAuth = lazy(() => import('./pages/OAuth.jsx'))
@@ -78,11 +78,56 @@ function App() {
       {showLoader ? <Loader /> : (
         <Routes>
           {/* Routes Client avec le Layout spécifique */}
+          {/* Routes Client avec le Layout spécifique */}
           <Route path="/client" element={<ClientLayout />}>
-            <Route index element={<Suspense fallback={<PageLoader />}><ClientHome /></Suspense>} />
-            <Route path="recherche" element={<Suspense fallback={<PageLoader />}><ResultatsRecherche /></Suspense>} />
-            <Route path="devenir-prestataire" element={<Suspense fallback={<PageLoader />}><BecomeProviderForm /></Suspense>} />
-            <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+
+            <Route
+              index
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ClientHome />
+                </Suspense>
+              }
+            />
+
+            {/* Recherche en langage naturel */}
+            <Route
+              path="recherche/natural"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ResultatsRecherche searchMode="natural" />
+                </Suspense>
+              }
+            />
+
+            {/* Recherche par critères */}
+            <Route
+              path="recherche/criteria"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ResultatsRecherche searchMode="criteria" />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="devenir-prestataire"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <BecomeProviderForm />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="profile"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Profile />
+                </Suspense>
+              }
+            />
+
           </Route>
 
           {/* Route Info Prestataire sans Header/Footer global */}

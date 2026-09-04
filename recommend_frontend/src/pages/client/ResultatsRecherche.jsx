@@ -34,24 +34,53 @@ L.Marker.prototype.options.icon = DefaultIcon
 const center = [-18.8792, 47.5079]
 
 // Composant pour déplacer la carte
-function ChangeView({ center, zoom }) {
+function ChangeView({ providers }) {
   const map = useMap()
 
   useEffect(() => {
-    map.setView(center, zoom)
-  }, [center, zoom, map])
+    const validCoordinates = providers
+      .filter(
+        (provider) =>
+          provider.location?.coordinates?.[0] != null &&
+          provider.location?.coordinates?.[1] != null
+      )
+      .map((provider) => [
+        provider.location.coordinates[1], // latitude
+        provider.location.coordinates[0]  // longitude
+      ])
+
+    if (validCoordinates.length === 0) {
+      map.setView([-18.8792, 47.5079], 12)
+      return
+    }
+
+    // Un seul provider
+    if (validCoordinates.length === 1) {
+      map.setView(validCoordinates[0], 15)
+      return
+    }
+
+    // Plusieurs providers :
+    // on ajuste automatiquement la carte
+    // pour tous les afficher
+    const bounds = L.latLngBounds(validCoordinates)
+
+    map.fitBounds(bounds, {
+      padding: [50, 50],
+      maxZoom: 15
+    })
+  }, [providers, map])
 
   return null
 }
-
 function ResultatsRecherche({ searchMode }) {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [providers, setProviders] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [hoveredProvider, setHoveredProvider] = useState(null)
- const API_URL = 'http://localhost:8000'
+  const API_URL = 'http://localhost:8000'
   useEffect(() => {
     const loadResults = async () => {
       try {
@@ -154,6 +183,47 @@ function ResultatsRecherche({ searchMode }) {
 
   const results = providers || []
 
+ {loading ? (
+  <div className="mt-4 flex items-center gap-3">
+    <div className="h-1.5 w-32 overflow-hidden rounded-full bg-zinc-200">
+      <div className="h-full w-1/2 rounded-full bg-yellow-400 animate-search-loading" />
+    </div>
+
+    <span className="text-sm font-medium text-zinc-400">
+      Recherche en cours...
+    </span>
+  </div>
+) : (
+  <p className="mt-4 text-zinc-500 font-semibold">
+    {results.length} prestataire
+    {results.length > 1 ? 's' : ''} trouvé
+    {results.length > 1 ? 's' : ''}
+  </p>
+)}
+
+  if (error) {
+    return (
+      <div className="flex min-h-[calc(100vh-73px)] items-center justify-center bg-zinc-50 px-5">
+        <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
+          <h2 className="text-xl font-bold text-black">
+            Une erreur est survenue
+          </h2>
+
+          <p className="mt-2 text-sm text-zinc-500">
+            {error}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mt-5 rounded-full bg-yellow-400 px-6 py-3 font-bold text-white transition hover:bg-yellow-500"
+          >
+            Retour
+          </button>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-73px)] overflow-hidden bg-white">
 
@@ -436,11 +506,7 @@ function ResultatsRecherche({ searchMode }) {
             width: '100%'
           }}
         >
-
-          <ChangeView
-            center={center}
-            zoom={12}
-          />
+          <ChangeView providers={results} />
 
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

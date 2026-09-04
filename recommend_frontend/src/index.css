@@ -107,3 +107,21 @@ html {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+@keyframes search-loading {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-search-loading {
+  animation: search-loading 1.2s ease-in-out infinite;
+}
